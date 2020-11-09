@@ -34,7 +34,6 @@
 #include <assert.h>
 #include <ctype.h>
 
-
 /**********************************************
  * SORTING CRITERIA
  **********************************************/
@@ -47,22 +46,21 @@ void set_spu_sort_descending(int descending)
 	spu_sort_descending = descending;
 }
 
-inline void set_spu_sort_field(enum spu_field_id field)
+extern inline void set_spu_sort_field(enum spu_field_id field)
 {
 	spu_sort_field = field;
 }
 
-inline enum spu_field_id get_spu_sort_field()
+extern inline enum spu_field_id get_spu_sort_field()
 {
 	return spu_sort_field;
 }
-
 
 /***********************************************
  * PER-SPU INFORMATION
  ***********************************************/
 
-static struct spu** spus;
+static struct spu **spus;
 static int spus_n;
 
 static int spus_compare(const void *v1, const void *v2)
@@ -70,54 +68,71 @@ static int spus_compare(const void *v1, const void *v2)
 	const struct spu *p1, *p2;
 	int ret;
 
-	p1 = *(struct spu * const *)v1;
-	p2 = *(struct spu * const *)v2;
+	p1 = *(struct spu *const *)v1;
+	p2 = *(struct spu *const *)v2;
 
-	switch (spu_sort_field) {
-		case SPU_NUMBER:
-			ret = p1->number - p2->number;  break;
-		case SPU_STATE:
-			ret = p1->state - p2->state; break;
+	switch (spu_sort_field)
+	{
+	case SPU_NUMBER:
+		ret = p1->number - p2->number;
+		break;
+	case SPU_STATE:
+		ret = p1->state - p2->state;
+		break;
 
-		case SPU_PERCENT_SPU:
-			ret = p1->percent[TIME_TOTAL] - p2->percent[TIME_TOTAL]; break;
-		case SPU_PERCENT_USER:
-			ret = p1->percent[TIME_USER] - p2->percent[TIME_USER]; break;
-		case SPU_PERCENT_SYSTEM:
-			ret = p1->percent[TIME_SYSTEM] - p2->percent[TIME_SYSTEM]; break;
-		case SPU_PERCENT_IOWAIT:
-			ret = p1->percent[TIME_IOWAIT] - p2->percent[TIME_IOWAIT]; break;
+	case SPU_PERCENT_SPU:
+		ret = p1->percent[TIME_TOTAL] - p2->percent[TIME_TOTAL];
+		break;
+	case SPU_PERCENT_USER:
+		ret = p1->percent[TIME_USER] - p2->percent[TIME_USER];
+		break;
+	case SPU_PERCENT_SYSTEM:
+		ret = p1->percent[TIME_SYSTEM] - p2->percent[TIME_SYSTEM];
+		break;
+	case SPU_PERCENT_IOWAIT:
+		ret = p1->percent[TIME_IOWAIT] - p2->percent[TIME_IOWAIT];
+		break;
 
-		case SPU_VOLUNTARY_CTX_SWITCHES:
-			ret = p1->voluntary_ctx_switches - p2->voluntary_ctx_switches; break;
-		case SPU_INVOLUNTARY_CTX_SWITCHES:
-			ret = p1->involuntary_ctx_switches - p2->involuntary_ctx_switches; break;
-		case SPU_SLB_MISSES:
-			ret = p1->slb_misses - p2->slb_misses; break;
-		case SPU_HASH_FAULTS:
-			ret = p1->hash_faults - p2->hash_faults; break;
-		case SPU_MINOR_PAGE_FAULTS:
-			ret = p1->minor_page_faults - p2->minor_page_faults; break;
-		case SPU_MAJOR_PAGE_FAULTS:
-			ret = p1->major_page_faults - p2->major_page_faults; break;
-		case SPU_CLASS2_INTERRUPTS:
-			ret = p1->class2_interrupts - p2->class2_interrupts; break;
-		case SPU_PPE_LIBRARY:
-			ret = p1->ppe_library - p2->ppe_library; break;
+	case SPU_VOLUNTARY_CTX_SWITCHES:
+		ret = p1->voluntary_ctx_switches - p2->voluntary_ctx_switches;
+		break;
+	case SPU_INVOLUNTARY_CTX_SWITCHES:
+		ret = p1->involuntary_ctx_switches - p2->involuntary_ctx_switches;
+		break;
+	case SPU_SLB_MISSES:
+		ret = p1->slb_misses - p2->slb_misses;
+		break;
+	case SPU_HASH_FAULTS:
+		ret = p1->hash_faults - p2->hash_faults;
+		break;
+	case SPU_MINOR_PAGE_FAULTS:
+		ret = p1->minor_page_faults - p2->minor_page_faults;
+		break;
+	case SPU_MAJOR_PAGE_FAULTS:
+		ret = p1->major_page_faults - p2->major_page_faults;
+		break;
+	case SPU_CLASS2_INTERRUPTS:
+		ret = p1->class2_interrupts - p2->class2_interrupts;
+		break;
+	case SPU_PPE_LIBRARY:
+		ret = p1->ppe_library - p2->ppe_library;
+		break;
 
-		case SPU_CTX_THREAD_ID:
-			ret = p1->ctx_thread_id - p2->ctx_thread_id; break;
+	case SPU_CTX_THREAD_ID:
+		ret = p1->ctx_thread_id - p2->ctx_thread_id;
+		break;
 
-		default :
-			ret = 0; break;
+	default:
+		ret = 0;
+		break;
 	}
-	return spu_sort_descending? -ret : ret;;
+	return spu_sort_descending ? -ret : ret;
+	;
 }
-
 
 static int spu_update(struct spu *spu)
 {
-	FILE* fd;
+	FILE *fd;
 	u64 period;
 	char buf[PATH_MAX];
 	enum time time;
@@ -133,28 +148,28 @@ static int spu_update(struct spu *spu)
 		spu->last_time[time] = spu->time[time];
 
 	fscanf(fd, "%s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
-		buf,
-		&spu->time[TIME_USER],
-		&spu->time[TIME_SYSTEM],
-		&spu->time[TIME_IOWAIT],
-		&spu->time[TIME_IDLE],
-		&spu->voluntary_ctx_switches,
-		&spu->involuntary_ctx_switches,
-		&spu->slb_misses,
-		&spu->hash_faults,
-		&spu->minor_page_faults,
-		&spu->major_page_faults,
-		&spu->class2_interrupts,
-		&spu->ppe_library);
+		   buf,
+		   &spu->time[TIME_USER],
+		   &spu->time[TIME_SYSTEM],
+		   &spu->time[TIME_IOWAIT],
+		   &spu->time[TIME_IDLE],
+		   &spu->voluntary_ctx_switches,
+		   &spu->involuntary_ctx_switches,
+		   &spu->slb_misses,
+		   &spu->hash_faults,
+		   &spu->minor_page_faults,
+		   &spu->major_page_faults,
+		   &spu->class2_interrupts,
+		   &spu->ppe_library);
 	fclose(fd);
 	spu->state = toupper(buf[0]);
 
 	spu->time[TIME_TOTAL] = spu->time[TIME_USER] +
-				spu->time[TIME_SYSTEM] +
-				spu->time[TIME_IOWAIT];
+							spu->time[TIME_SYSTEM] +
+							spu->time[TIME_IOWAIT];
 
 	period = (spu->time[TIME_TOTAL] - spu->last_time[TIME_TOTAL]) +
-		(spu->time[TIME_IDLE] - spu->last_time[TIME_IDLE]);
+			 (spu->time[TIME_IDLE] - spu->last_time[TIME_IDLE]);
 
 	for_each_time(time)
 		spu->percent[time] = PERCENT(spu->last_time[time], spu->time[time], period);
@@ -168,21 +183,25 @@ struct spu **get_spus()
 	int i;
 	DIR *spus_dir;
 
-	if (!spus) {
+	if (!spus)
+	{
 		spus_n = count_spus();
-		spus = malloc(sizeof(struct spu*) * (spus_n + 1));
+		spus = malloc(sizeof(struct spu *) * (spus_n + 1));
 		for (i = 0; i < spus_n; i++)
 			spus[i] = calloc(1, sizeof(struct spu));
 		spus[spus_n] = NULL;
 
 		i = 0;
 		spus_dir = opendir(SYSFS_PATH "/devices/system/spu");
-		if (!spus_dir) {
+		if (!spus_dir)
+		{
 			return spus;
 		}
 
-		while ((entry = readdir(spus_dir)) != NULL) {
-			if (!strncmp(entry->d_name, "spu", 3)) {
+		while ((entry = readdir(spus_dir)) != NULL)
+		{
+			if (!strncmp(entry->d_name, "spu", 3))
+			{
 				int ret;
 				assert(i < spus_n);
 				ret = sscanf(entry->d_name, "spu%d", &spus[i]->number);
@@ -195,7 +214,8 @@ struct spu **get_spus()
 
 	assert(spus);
 
-	for (i = 0; i < spus_n; i++) {
+	for (i = 0; i < spus_n; i++)
+	{
 		spu_update(spus[i]);
 	}
 
@@ -205,83 +225,85 @@ struct spu **get_spus()
 }
 
 struct field spu_fields[] = {
-	{ SPU_NUMBER,         "SPE",   "%3s",  "%3d",    "SPE Number",   1, "" },
-	{ SPU_PERCENT_SPU,    "%SPU",  "%6s",  "%6.1f",  "SPU Usage",    1, "" },
-	{ SPU_PERCENT_USER,   "%USR",  "%6s",  "%6.1f",  "SPU User",     1, "" },
-	{ SPU_PERCENT_SYSTEM, "%SYS",  "%6s",  "%6.1f",  "SPU System",   1, "" },
-	{ SPU_PERCENT_IOWAIT, "%WAI",  "%6s",  "%6.1f",  "SPU I/O Wait", 1, "" },
-	{ SPU_STATE,          "S",     "%2s",  "%2c",    "State",        1, "" },
+	{SPU_NUMBER, "SPE", "%3s", "%3d", "SPE Number", 1, ""},
+	{SPU_PERCENT_SPU, "%SPU", "%6s", "%6.1f", "SPU Usage", 1, ""},
+	{SPU_PERCENT_USER, "%USR", "%6s", "%6.1f", "SPU User", 1, ""},
+	{SPU_PERCENT_SYSTEM, "%SYS", "%6s", "%6.1f", "SPU System", 1, ""},
+	{SPU_PERCENT_IOWAIT, "%WAI", "%6s", "%6.1f", "SPU I/O Wait", 1, ""},
+	{SPU_STATE, "S", "%2s", "%2c", "State", 1, ""},
 
-	{ SPU_VOLUNTARY_CTX_SWITCHES,   "VCSW",    "%6s", "%6llu", "Number of Voluntary Context Switches",     0, "" },
-	{ SPU_INVOLUNTARY_CTX_SWITCHES, "ICSW",    "%6s", "%6llu", "Number of Involuntary Context Switches",   0, "" },
-	{ SPU_SLB_MISSES,               "SLB",     "%6s", "%6llu", "Number of SLB Misses",                     1, "" },
-	{ SPU_HASH_FAULTS,              "HFLT",    "%6s", "%6llu", "Number of Hash Faults",                    1, "" },
-	{ SPU_MINOR_PAGE_FAULTS,        "mFLT",    "%6s", "%6llu", "Number of Minor Page Faults",              1, "" },
-	{ SPU_MAJOR_PAGE_FAULTS,        "MFLT",    "%6s", "%6llu", "Number of Major Page Faults",              1, "" },
-	{ SPU_CLASS2_INTERRUPTS,        "IRQ2",    "%6s", "%6llu", "Number of Class2 Interrupts Received",     1, "" },
-	{ SPU_PPE_LIBRARY,              "PPE_LIB", "%8s", "%8llu", "Number of PPE Assisted Library Calls Performed", 1, "" },
+	{SPU_VOLUNTARY_CTX_SWITCHES, "VCSW", "%6s", "%6llu", "Number of Voluntary Context Switches", 0, ""},
+	{SPU_INVOLUNTARY_CTX_SWITCHES, "ICSW", "%6s", "%6llu", "Number of Involuntary Context Switches", 0, ""},
+	{SPU_SLB_MISSES, "SLB", "%6s", "%6llu", "Number of SLB Misses", 1, ""},
+	{SPU_HASH_FAULTS, "HFLT", "%6s", "%6llu", "Number of Hash Faults", 1, ""},
+	{SPU_MINOR_PAGE_FAULTS, "mFLT", "%6s", "%6llu", "Number of Minor Page Faults", 1, ""},
+	{SPU_MAJOR_PAGE_FAULTS, "MFLT", "%6s", "%6llu", "Number of Major Page Faults", 1, ""},
+	{SPU_CLASS2_INTERRUPTS, "IRQ2", "%6s", "%6llu", "Number of Class2 Interrupts Received", 1, ""},
+	{SPU_PPE_LIBRARY, "PPE_LIB", "%8s", "%8llu", "Number of PPE Assisted Library Calls Performed", 1, ""},
 
-	{ SPU_CTX_THREAD_ID,            "TID",     "%6s", "%6d",   "SPE Controlling Thread ID",                0, "" },
+	{SPU_CTX_THREAD_ID, "TID", "%6s", "%6d", "SPE Controlling Thread ID", 0, ""},
 
-	{ 0,            NULL,    NULL,      NULL,    NULL,                        0 }
-};
+	{0, NULL, NULL, NULL, NULL, 0}};
 
 int print_spu_field(struct spu *spu, char *buf, enum spu_field_id field, const char *format)
 {
-	switch(field) {
-		case SPU_NUMBER:
-			return sprintf(buf, format, spu->number);
-		case SPU_STATE:
-			return sprintf(buf, format, spu->state);
-		case SPU_PERCENT_SPU:
-			return sprintf(buf, format, spu->percent[TIME_TOTAL]);
-		case SPU_PERCENT_USER:
-			return sprintf(buf, format, spu->percent[TIME_USER]);
-		case SPU_PERCENT_SYSTEM:
-			return sprintf(buf, format, spu->percent[TIME_SYSTEM]);
-		case SPU_PERCENT_IOWAIT:
-			return sprintf(buf, format, spu->percent[TIME_IOWAIT]);
+	switch (field)
+	{
+	case SPU_NUMBER:
+		return sprintf(buf, format, spu->number);
+	case SPU_STATE:
+		return sprintf(buf, format, spu->state);
+	case SPU_PERCENT_SPU:
+		return sprintf(buf, format, spu->percent[TIME_TOTAL]);
+	case SPU_PERCENT_USER:
+		return sprintf(buf, format, spu->percent[TIME_USER]);
+	case SPU_PERCENT_SYSTEM:
+		return sprintf(buf, format, spu->percent[TIME_SYSTEM]);
+	case SPU_PERCENT_IOWAIT:
+		return sprintf(buf, format, spu->percent[TIME_IOWAIT]);
 
-		case SPU_VOLUNTARY_CTX_SWITCHES:
-			return sprintf(buf, format, spu->voluntary_ctx_switches);
-		case SPU_INVOLUNTARY_CTX_SWITCHES:
-			return sprintf(buf, format, spu->involuntary_ctx_switches);
-		case SPU_SLB_MISSES:
-			return sprintf(buf, format, spu->slb_misses);
-		case SPU_HASH_FAULTS:
-			return sprintf(buf, format, spu->hash_faults);
-		case SPU_MINOR_PAGE_FAULTS:
-			return sprintf(buf, format, spu->minor_page_faults);
-		case SPU_MAJOR_PAGE_FAULTS:
-			return sprintf(buf, format, spu->major_page_faults);
-		case SPU_CLASS2_INTERRUPTS:
-			return sprintf(buf, format, spu->class2_interrupts);
-		case SPU_PPE_LIBRARY:
-			return sprintf(buf, format, spu->ppe_library);
+	case SPU_VOLUNTARY_CTX_SWITCHES:
+		return sprintf(buf, format, spu->voluntary_ctx_switches);
+	case SPU_INVOLUNTARY_CTX_SWITCHES:
+		return sprintf(buf, format, spu->involuntary_ctx_switches);
+	case SPU_SLB_MISSES:
+		return sprintf(buf, format, spu->slb_misses);
+	case SPU_HASH_FAULTS:
+		return sprintf(buf, format, spu->hash_faults);
+	case SPU_MINOR_PAGE_FAULTS:
+		return sprintf(buf, format, spu->minor_page_faults);
+	case SPU_MAJOR_PAGE_FAULTS:
+		return sprintf(buf, format, spu->major_page_faults);
+	case SPU_CLASS2_INTERRUPTS:
+		return sprintf(buf, format, spu->class2_interrupts);
+	case SPU_PPE_LIBRARY:
+		return sprintf(buf, format, spu->ppe_library);
 
-		case SPU_CTX_THREAD_ID:
-			return sprintf(buf, format, spu->ctx_thread_id);
+	case SPU_CTX_THREAD_ID:
+		return sprintf(buf, format, spu->ctx_thread_id);
 
-		default:
-			return 0;
+	default:
+		return 0;
 	}
 }
 
-
-void fill_spus_tids(struct spu** spus, struct ctx** ctxs)
+void fill_spus_tids(struct spu **spus, struct ctx **ctxs)
 {
 	int i, j;
 
 	for (j = 0; spus[j]; j++)
 		spus[j]->ctx_thread_id = 0;
 
-	for (i = 0; ctxs[i]; i++) {
+	for (i = 0; ctxs[i]; i++)
+	{
 		int spe = ctxs[i]->spe;
 		if (spe < 0)
 			continue;
 
-		for (j = 0; spus[j]; j++) {
-			if (spus[j]->number == spe) {
+		for (j = 0; spus[j]; j++)
+		{
+			if (spus[j]->number == spe)
+			{
 				spus[j]->ctx_thread_id = ctxs[i]->thread_id;
 				break;
 			}
