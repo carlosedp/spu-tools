@@ -1,12 +1,13 @@
 ARCHIV := spu-tools.tar.gz
 
-CC = gcc
-CFLAGS = -g -Wall
+CC ?= gcc
+CFLAGS ?= -g -Wall
 PREFIX = $(DESTDIR)/usr
+LIBS ?= -lncurses
 
 objs = ctx-info.o spu-info.o proc-info.o general-info.o spu-top.o spu-ps.o
 target = spu-top spu-ps
-all: $(target) man
+all: $(target)
 
 ctx-info.o: ctx-info.c spu-tools.h
 spu-info.o: spu-info.c spu-tools.h
@@ -16,10 +17,10 @@ spu-top.o: spu-top.c spu-tools.h
 spu-ps.o: spu-ps.c spu-tools.h
 
 spu-top: ctx-info.o spu-info.o proc-info.o general-info.o spu-top.o
-	$(CC) $(CFLAGS) -lncurses ctx-info.o spu-info.o proc-info.o general-info.o spu-top.o -o spu-top
+	$(CC) $(CFLAGS) $(LDFLAGS) ctx-info.o spu-info.o proc-info.o general-info.o spu-top.o -o spu-top $(LIBS)
 
 spu-ps: ctx-info.o spu-ps.o
-	$(CC) $(CFLAGS) ctx-info.o spu-ps.o -o spu-ps
+	$(CC) $(CFLAGS) $(LDFLAGS) ctx-info.o spu-ps.o -o spu-ps
 
 clean:
 	@rm -Rf *.o *~ $(objs) $(target) spu-top.1 spu-ps.1
