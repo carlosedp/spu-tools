@@ -3,7 +3,7 @@ ARCHIV := spu-tools.tar.gz
 CC ?= gcc
 CFLAGS ?= -g -Wall
 PREFIX = $(DESTDIR)/usr
-LIBS ?= -lncurses
+LIBS ?= -lncursesw
 
 objs = ctx-info.o spu-info.o proc-info.o general-info.o spu-top.o spu-ps.o
 target = spu-top spu-ps

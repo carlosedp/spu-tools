@@ -22,6 +22,7 @@
 #include "spu-tools.h"
 
 #include <stdio.h>
+#include <limits.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
@@ -41,21 +42,10 @@ float PERCENT(u64 old_t, u64 new_t, u64 tot_t)
 }
 
 static int ctx_sort_descending;
-static enum ctx_field_id ctx_sort_field = CTX_PPU_PID;
 
 void set_ctx_sort_descending(int descending)
 {
 	ctx_sort_descending = descending;
-}
-
-extern inline void set_ctx_sort_field(enum ctx_field_id field)
-{
-	ctx_sort_field = field;
-}
-
-extern inline enum ctx_field_id get_ctx_sort_field()
-{
-	return ctx_sort_field;
 }
 
 /**********************************************

@@ -25,7 +25,7 @@
 #include <dirent.h>
 
 #ifndef SPUFS_PATH
-#define SPUFS_PATH  "/spu"
+#define SPUFS_PATH "/spu"
 #endif
 
 #ifndef PROCFS_PATH
@@ -40,10 +40,11 @@ typedef unsigned long long u64;
 typedef unsigned int u32;
 typedef char s8;
 
-struct field {
+struct field
+{
 	char id;
-	const char* name;
-	const char* name_format;
+	const char *name;
+	const char *name_format;
 
 	const char *format;
 	const char *description;
@@ -51,23 +52,32 @@ struct field {
 	const char *id_string;
 };
 
+enum time
+{
+	TIME_USER = 0,
+	TIME_NICE,
+	TIME_SYSTEM,
+	TIME_IOWAIT,
+	TIME_LOADED,
+	TIME_TOTAL,
+	TIME_IDLE,
+	TIME_MAX
+};
 
-enum time { TIME_USER=0, TIME_NICE, TIME_SYSTEM, TIME_IOWAIT, TIME_LOADED,
-		TIME_TOTAL, TIME_IDLE, TIME_MAX };
-
-#define for_each_time(time) for((time)=0; time<TIME_MAX; time++)
+#define for_each_time(time) for ((time) = 0; time < TIME_MAX; time++)
 float PERCENT(u64 old_t, u64 new_t, u64 tot_t);
 
 /*
  * PER_CTX
  */
 
-#define SPE_UNKNOWN  -1
-#define SPE_NONE     -2
+#define SPE_UNKNOWN -1
+#define SPE_NONE -2
 
-enum ctx_field_id {
-	CTX_INVALID=0,
-	CTX_PPU_PID='a',
+enum ctx_field_id
+{
+	CTX_INVALID = 0,
+	CTX_PPU_PID = 'a',
 	CTX_THREAD_ID,
 	CTX_USER,
 	CTX_STATUS,
@@ -90,14 +100,15 @@ enum ctx_field_id {
 	CTX_MAX_FIELD
 };
 
-struct ctx {
-	int         ppu_pid;
-	int         thread_id;
+struct ctx
+{
+	int ppu_pid;
+	int thread_id;
 	const char *user;
-	char        status;
-	char        flags;       /* Isolated / Normal */
-	int         spe;
-	char       *binary_name;
+	char status;
+	char flags; /* Isolated / Normal */
+	int spe;
+	char *binary_name;
 
 	u64 time[TIME_MAX];
 
@@ -120,20 +131,19 @@ extern struct field ctx_fields[];
 struct ctx **get_spu_contexts(u64 period);
 
 int print_ctx_field(struct ctx *ctx, char *buf, enum ctx_field_id field,
-		     const char *format);
-
-inline void set_ctx_sort_field(enum ctx_field_id field);
-inline enum ctx_field_id get_ctx_sort_field();
+					const char *format);
+static inline void set_ctx_sort_field(enum ctx_field_id field);
+static inline enum ctx_field_id get_ctx_sort_field();
 void set_ctx_sort_descending(int descending);
-
 
 /*
  * PER_SPU
  */
 
-enum spu_field_id {
-	SPU_INVALID=0,
-	SPU_NUMBER='a',
+enum spu_field_id
+{
+	SPU_INVALID = 0,
+	SPU_NUMBER = 'a',
 	SPU_STATE,
 	SPU_PERCENT_SPU,
 	SPU_PERCENT_USER,
@@ -151,7 +161,8 @@ enum spu_field_id {
 	SPU_MAX_FIELD
 };
 
-struct spu {
+struct spu
+{
 	int number;
 
 	char state;
@@ -173,27 +184,27 @@ struct spu {
 	int ctx_thread_id;
 };
 
-
 extern struct field spu_fields[];
 
 struct spu **get_spus();
 
 int print_spu_field(struct spu *spu, char *buf, enum spu_field_id field,
-		     const char *format);
+					const char *format);
 
-inline enum spu_field_id get_spu_sort_field();
-inline void set_spu_sort_field(enum spu_field_id field);
+static inline enum spu_field_id get_spu_sort_field();
+static inline void set_spu_sort_field(enum spu_field_id field);
 void set_spu_sort_descending(int descending);
 
-void fill_spus_tids(struct spu** spus, struct ctx** ctxs);
+void fill_spus_tids(struct spu **spus, struct ctx **ctxs);
 
 /*
  * PER_PROC
  */
 
-enum proc_field_id {
-	PROC_INVALID=0,
-	PROC_PPU_PID='a',
+enum proc_field_id
+{
+	PROC_INVALID = 0,
+	PROC_PPU_PID = 'a',
 	PROC_N_THREADS,
 	PROC_USER,
 	PROC_PERCENT_SPU,
@@ -214,10 +225,11 @@ enum proc_field_id {
 	PROC_MAX_FIELD
 };
 
-struct proc {
-	int         ppu_pid;
+struct proc
+{
+	int ppu_pid;
 	const char *user;
-	char       *binary_name;
+	char *binary_name;
 
 	u64 time[TIME_MAX];
 
@@ -237,14 +249,48 @@ struct proc {
 
 extern struct field proc_fields[];
 
-struct proc **get_procs(struct ctx** ctxs);
+struct proc **get_procs(struct ctx **ctxs);
 
 int print_proc_field(struct proc *proc, char *buf, enum proc_field_id field,
-		     const char *format);
+					 const char *format);
 
-inline enum proc_field_id get_proc_sort_field();
-inline void set_proc_sort_field(enum proc_field_id field);
+static inline enum proc_field_id get_proc_sort_field();
+static inline void set_proc_sort_field(enum proc_field_id field);
 void set_proc_sort_descending(int descending);
+
+static enum ctx_field_id ctx_sort_field = CTX_PPU_PID;
+static inline void set_ctx_sort_field(enum ctx_field_id field)
+{
+	ctx_sort_field = field;
+}
+
+static inline enum ctx_field_id get_ctx_sort_field()
+{
+	return ctx_sort_field;
+}
+
+static enum proc_field_id proc_sort_field = PROC_PPU_PID;
+
+static inline enum proc_field_id get_proc_sort_field()
+{
+	return proc_sort_field;
+}
+
+static inline void set_proc_sort_field(enum proc_field_id field)
+{
+	proc_sort_field = field;
+}
+
+static enum spu_field_id spu_sort_field = SPU_NUMBER;
+static inline void set_spu_sort_field(enum spu_field_id field)
+{
+	spu_sort_field = field;
+}
+
+static inline enum spu_field_id get_spu_sort_field()
+{
+	return spu_sort_field;
+}
 
 /*
  * GENERAL
@@ -256,10 +302,8 @@ int count_spus();
 void get_spus_loadavg(float *avg1min, float *avg5min, float *avg15min);
 void get_cpus_loadavg(float *avg1min, float *avg5min, float *avg15min);
 
-void get_spu_stats(struct spu** spus, float *percents);
+void get_spu_stats(struct spu **spus, float *percents);
 
 void get_cpu_stats(float *percents);
 
-
 #endif
-

@@ -33,7 +33,6 @@
 #include <pwd.h>
 #include <assert.h>
 
-
 /***********************************************
  * CPUS / SPUS stats
  ***********************************************/
@@ -42,7 +41,7 @@ static u64 last_times[TIME_MAX];
 
 void get_cpu_stats(float *percents)
 {
-	FILE* fd;
+	FILE *fd;
 	static u64 times[TIME_MAX];
 	enum time time;
 	u64 irq_time, softirq_time, steal_time, period;
@@ -53,25 +52,25 @@ void get_cpu_stats(float *percents)
 
 	steal_time = 0;
 	ret = fscanf(fd, "cpu  %llu %llu %llu %llu %llu %llu %llu %llu",
-		&times[TIME_USER], &times[TIME_NICE], &times[TIME_SYSTEM], &times[TIME_IDLE],
-		&times[TIME_IOWAIT], &irq_time, &softirq_time, &steal_time);
+				 &times[TIME_USER], &times[TIME_NICE], &times[TIME_SYSTEM], &times[TIME_IDLE],
+				 &times[TIME_IOWAIT], &irq_time, &softirq_time, &steal_time);
 	assert(ret >= 7);
 	fclose(fd);
 	times[TIME_SYSTEM] += irq_time + softirq_time + steal_time;
 
-	times[TIME_TOTAL] = times[TIME_USER] + times[TIME_NICE] + times[TIME_SYSTEM]
-			 + times[TIME_IDLE] + times[TIME_IOWAIT];
+	times[TIME_TOTAL] = times[TIME_USER] + times[TIME_NICE] + times[TIME_SYSTEM] + times[TIME_IDLE] + times[TIME_IOWAIT];
 
 	assert(times[TIME_TOTAL] >= last_times[TIME_TOTAL]);
 	period = times[TIME_TOTAL] - last_times[TIME_TOTAL];
 
-	for_each_time(time) {
-		percents[time] = PERCENT(last_times[time],times[time],period);
+	for_each_time(time)
+	{
+		percents[time] = PERCENT(last_times[time], times[time], period);
 		last_times[time] = times[time];
 	}
 }
 
-void get_spu_stats(struct spu** spus, float *percents)
+void get_spu_stats(struct spu **spus, float *percents)
 {
 	u64 sum[TIME_MAX];
 	int i;
@@ -83,24 +82,27 @@ void get_spu_stats(struct spu** spus, float *percents)
 	for_each_time(time)
 		sum[time] = 0;
 
-	for (i = 0; spus[i]; i++) {
+	for (i = 0; spus[i]; i++)
+	{
 		for_each_time(time)
 			sum[time] += (spus[i]->time[time] - spus[i]->last_time[time]);
 	}
 
-	if (i > 0) {
+	if (i > 0)
+	{
 		for_each_time(time)
-			percents[time] = PERCENT(0, sum[time], sum[TIME_TOTAL]+sum[TIME_IDLE]);
+			percents[time] = PERCENT(0, sum[time], sum[TIME_TOTAL] + sum[TIME_IDLE]);
 	}
 }
 
 void get_cpus_loadavg(float *avg1min, float *avg5min, float *avg15min)
 {
-	FILE* fd;
+	FILE *fd;
 	int ret;
 
 	fd = fopen(PROCFS_PATH "/loadavg", "r");
-	if (fd) {
+	if (fd)
+	{
 		ret = fscanf(fd, "%f %f %f", avg1min, avg5min, avg15min);
 		fclose(fd);
 	}
@@ -108,17 +110,17 @@ void get_cpus_loadavg(float *avg1min, float *avg5min, float *avg15min)
 
 void get_spus_loadavg(float *avg1min, float *avg5min, float *avg15min)
 {
-	FILE* fd;
+	FILE *fd;
 	int ret;
 
 	fd = fopen(PROCFS_PATH "/spu_loadavg", "r");
-	if (fd) {
+	if (fd)
+	{
 		ret = fscanf(fd, "%f %f %f", avg1min, avg5min, avg15min);
 		fclose(fd);
 		assert(ret >= 3);
 	}
 }
-
 
 /**********************************************
  * GENERIC FUNCTIONS

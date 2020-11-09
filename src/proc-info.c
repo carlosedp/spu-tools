@@ -64,18 +64,6 @@ struct field proc_fields[] = {
 
 static int proc_sort_descending;
 
-static enum proc_field_id proc_sort_field = PROC_PPU_PID;
-
-extern inline enum proc_field_id get_proc_sort_field()
-{
-	return proc_sort_field;
-}
-
-extern inline void set_proc_sort_field(enum proc_field_id field)
-{
-	proc_sort_field = field;
-}
-
 void set_proc_sort_descending(int descending)
 {
 	proc_sort_descending = descending;

@@ -22,6 +22,7 @@
 #include "spu-tools.h"
 
 #include <stdio.h>
+#include <limits.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
@@ -39,21 +40,10 @@
  **********************************************/
 
 static int spu_sort_descending;
-static enum spu_field_id spu_sort_field = SPU_NUMBER;
 
 void set_spu_sort_descending(int descending)
 {
 	spu_sort_descending = descending;
-}
-
-extern inline void set_spu_sort_field(enum spu_field_id field)
-{
-	spu_sort_field = field;
-}
-
-extern inline enum spu_field_id get_spu_sort_field()
-{
-	return spu_sort_field;
 }
 
 /***********************************************
@@ -294,18 +284,21 @@ void fill_spus_tids(struct spu **spus, struct ctx **ctxs)
 	for (j = 0; spus[j]; j++)
 		spus[j]->ctx_thread_id = 0;
 
-	for (i = 0; ctxs[i]; i++)
+	if (ctxs != NULL)
 	{
-		int spe = ctxs[i]->spe;
-		if (spe < 0)
-			continue;
-
-		for (j = 0; spus[j]; j++)
+		for (i = 0; ctxs[i]; i++)
 		{
-			if (spus[j]->number == spe)
+			int spe = ctxs[i]->spe;
+			if (spe < 0)
+				continue;
+
+			for (j = 0; spus[j]; j++)
 			{
-				spus[j]->ctx_thread_id = ctxs[i]->thread_id;
-				break;
+				if (spus[j]->number == spe)
+				{
+					spus[j]->ctx_thread_id = ctxs[i]->thread_id;
+					break;
+				}
 			}
 		}
 	}
